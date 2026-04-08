@@ -148,15 +148,18 @@ class Request:
         )
         try:
             result = await self._execute_fetch_request(final_url, options)
+        except Exception as exc:
+            logger.error(f'Request failed: {exc}')
+            raise HTTPError(f'Request failed: {str(exc)}') from exc
+        else:
+            # Check for JS fetch error (runs only if try succeeded)
+            result_value = result.get('result', {}).get('result', {}).get('value', {})
+            if 'error' in result_value:
+                raise HTTPError(f'Fetch error: {result_value["error"]}')
             received_headers = self._extract_received_headers()
             sent_headers = self._extract_sent_headers()
             cookies = self._extract_set_cookies()
             return self._build_response(result, received_headers, sent_headers, cookies)
-
-        except Exception as exc:
-            logger.error(f'Request failed: {exc}')
-            raise HTTPError(f'Request failed: {str(exc)}') from exc
-
         finally:
             await self._clear_callbacks()
 
@@ -408,11 +411,6 @@ class Request:
         """Build Response object from fetch result."""
         result_value = result['result']['result']['value']
         logger.debug(f'Building response: result_value={result_value}')
-
-        # Check if JavaScript fetch reported an error (CORS, network failure, etc.)
-        if 'error' in result_value:
-            raise HTTPError(f'Fetch error: {result_value["error"]}')
-
         return Response(
             status_code=result_value['status'],
             content=bytes(result_value.get('content', b'')),
