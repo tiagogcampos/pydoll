@@ -153,7 +153,7 @@ class Request:
             raise HTTPError(f'Request failed: {str(exc)}') from exc
         else:
             # Check for JS fetch error (runs only if try succeeded)
-            result_value = result.get('result', {}).get('result', {}).get('value', {})
+            result_value = result['result']['result']['value']
             if 'error' in result_value:
                 raise HTTPError(f'Fetch error: {result_value["error"]}')
             received_headers = self._extract_received_headers()
