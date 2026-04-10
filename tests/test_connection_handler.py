@@ -215,8 +215,13 @@ async def test__incoming_messages(connection_handler):
     connection_handler._ws_connection.recv = AsyncMock(
         return_value='{"id": 1, "method": "SomeMethod"}'
     )
-    async_generator = connection_handler._incoming_messages()
-    result = await anext(async_generator)
+
+    try:
+        async_generator = connection_handler._incoming_messages()
+        result = await anext(async_generator)
+    finally:
+        await async_generator.aclose()
+
     assert result == '{"id": 1, "method": "SomeMethod"}'
 
 
