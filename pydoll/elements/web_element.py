@@ -319,7 +319,9 @@ class WebElement(FindElementsMixin):  # noqa: PLR0904
     async def _get_shadow_root(self) -> ShadowRoot:
         """Get the shadow root attached to this element (single attempt)."""
         response: DescribeNodeResponse = await self._execute_command(
-            cast(Command, DomCommands.describe_node(object_id=self._object_id, depth=1, pierce=True))
+            cast(
+                Command, DomCommands.describe_node(object_id=self._object_id, depth=1, pierce=True)
+            )
         )
         node_info = response.get('result', {}).get('node', {})
         shadow_roots = node_info.get('shadowRoots', [])
